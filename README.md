@@ -1,1 +1,1 @@
-# sketches
+# Some fun sketches using [nannou](https://github.com/nannou-org/nannou)
