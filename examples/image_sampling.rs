@@ -3,6 +3,8 @@ use image::GenericImageView;
 
 use nannou::prelude::*;
 
+const FACTOR: f64 = 3.;
+
 fn main() {
     nannou::app(model).update(update).run();
 }
@@ -25,12 +27,12 @@ fn model(app: &App) -> Model {
         .unwrap();
     Model {
         _window,
-        poise: PoissonDisk::new(5, 30, image),
+        poise: PoissonDisk::new(4, 10, image),
     }
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    for _ in 0..10 {
+    for _ in 0..50 {
         model.poise.tick();
     }
 }
@@ -169,7 +171,14 @@ impl PoissonDisk {
             for y in start_y..end_y {
                 let cell_idx = y * self.cell_width as usize + x;
                 if let Some(grid_point) = self.grid[cell_idx] {
-                    if self.distance(point, grid_point) <= self.radius.into() {
+                    let fraction = self
+                        .image
+                        .get_pixel(grid_point.0 as u32, self.height - 1 - grid_point.1 as u32)[0]
+                        as f64
+                        / 255.;
+                    if self.distance(point, grid_point)
+                        <= (self.radius as f64) * (fraction * FACTOR)
+                    {
                         return false;
                     }
                 }
@@ -197,8 +206,8 @@ impl PoissonDisk {
             self.image
                 .get_pixel(point.0 as u32, self.height - 1 - point.1 as u32)[0] as f64
                 / 255.;
-        let fraction = map_range(1. - fraction, 0., 1., 0.1, 1.);
-        let new_radius = dbg!(fraction) * self.radius as f64 * (random_f64() + 1.0);
+        let new_radius =
+            self.radius as f64 * (random_f64() * (fraction * FACTOR) + fraction * FACTOR);
         // Find new coordinates relative to point p.
         let new_x = point.0 as f64 + new_radius * theta.cos();
         let new_y = point.1 as f64 + new_radius * theta.sin();
