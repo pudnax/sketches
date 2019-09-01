@@ -3,8 +3,6 @@ use image::GenericImageView;
 
 use nannou::prelude::*;
 
-const FACTOR: f64 = 3.;
-
 fn main() {
     nannou::app(model).update(update).run();
 }
@@ -12,10 +10,14 @@ fn main() {
 struct Model {
     _window: window::Id,
     poise: PoissonDisk,
+    image: image::DynamicImage,
+    h: u32,
 }
 
 fn model(app: &App) -> Model {
-    let image = image::open("in.png").unwrap();
+    let name = "gray.png";
+    let image = image::open(name).unwrap();
+    let image2 = image::open(name).unwrap();
     let (w, h) = image.dimensions();
 
     let _window = app
@@ -27,7 +29,9 @@ fn model(app: &App) -> Model {
         .unwrap();
     Model {
         _window,
-        poise: PoissonDisk::new(4, 10, image),
+        poise: PoissonDisk::new(4, 10, image2),
+        image,
+        h,
     }
 }
 
@@ -64,14 +68,17 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     // Prepare to draw.
     let draw = app.draw();
     // Clear the background to pink.
-    draw.background().color(BLACK);
+    draw.background().color(WHITE);
     let win = app.window_rect();
     // Draw a red ellipse with default size and position.
     for p in &model.poise.samples {
+        let fraction =
+            1. - model.image.get_pixel(p.0 as u32, model.h - 1 - p.1 as u32)[0] as f32 / 255.;
+        let size = 0.5 + fraction * 3.5;
         draw.ellipse()
             .x_y(p.0 as f32 - win.w() / 2., p.1 as f32 - win.h() / 2.)
-            .color(WHITE)
-            .w_h(2., 2.);
+            .color(BLACK)
+            .w_h(size, size);
     }
     // Write to the window frame.
     draw.to_frame(app, &frame).unwrap();
@@ -90,7 +97,6 @@ pub enum Cell {
 }
 
 pub struct PoissonDisk {
-    image: image::DynamicImage,
     width: u32,
     height: u32,
     cell_size: f64,
@@ -124,7 +130,6 @@ impl PoissonDisk {
         let grid = vec![None; (cell_width * cell_height) as usize];
 
         let mut disk = PoissonDisk {
-            image,
             width,
             height,
             cells,
@@ -171,14 +176,7 @@ impl PoissonDisk {
             for y in start_y..end_y {
                 let cell_idx = y * self.cell_width as usize + x;
                 if let Some(grid_point) = self.grid[cell_idx] {
-                    let fraction = self
-                        .image
-                        .get_pixel(grid_point.0 as u32, self.height - 1 - grid_point.1 as u32)[0]
-                        as f64
-                        / 255.;
-                    if self.distance(point, grid_point)
-                        <= (self.radius as f64) * (fraction * FACTOR)
-                    {
+                    if self.distance(point, grid_point) <= (self.radius as f64) {
                         return false;
                     }
                 }
@@ -202,12 +200,8 @@ impl PoissonDisk {
     fn new_point(&mut self, point: (usize, usize)) -> (usize, usize) {
         let theta = TAU_F64 * random_f64();
         // Pick a random radius between `r` and `2r`
-        let fraction =
-            self.image
-                .get_pixel(point.0 as u32, self.height - 1 - point.1 as u32)[0] as f64
-                / 255.;
-        let new_radius =
-            self.radius as f64 * (random_f64() * (fraction * FACTOR) + fraction * FACTOR);
+
+        let new_radius = self.radius as f64 * (random_f64() + 1.);
         // Find new coordinates relative to point p.
         let new_x = point.0 as f64 + new_radius * theta.cos();
         let new_y = point.1 as f64 + new_radius * theta.sin();
