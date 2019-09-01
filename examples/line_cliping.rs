@@ -1,3 +1,4 @@
+use nannou::noise::NoiseFn;
 use nannou::prelude::*;
 
 fn main() {
@@ -6,6 +7,8 @@ fn main() {
 
 struct Model {
     _window: window::Id,
+    perlin: nannou::noise::Perlin,
+    counter: f64,
 }
 
 fn model(app: &App) -> Model {
@@ -17,10 +20,16 @@ fn model(app: &App) -> Model {
         .event(window_event)
         .build()
         .unwrap();
-    Model { _window }
+    Model {
+        _window,
+        perlin: nannou::noise::Perlin::new(),
+        counter: 0.,
+    }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    model.counter += 0.001;
+}
 
 fn window_event(_app: &App, _model: &mut Model, event: WindowEvent) {
     match event {
@@ -45,7 +54,7 @@ fn window_event(_app: &App, _model: &mut Model, event: WindowEvent) {
     }
 }
 
-fn view(app: &App, _model: &Model, frame: &Frame) {
+fn view(app: &App, model: &Model, frame: &Frame) {
     // Prepare to draw.
     let draw = app.draw();
     // Clear the background to pink.
@@ -53,15 +62,27 @@ fn view(app: &App, _model: &Model, frame: &Frame) {
     // Draw a red ellipse with default size and position.
 
     let win = app.window_rect();
-    let frac = 7;
+    let frac = 20;
     let w = win.w() / frac as f32;
     let h = win.h() / frac as f32;
 
     for xoff in (-frac..frac).map(|x| x as f32 * w) {
         for yoff in (-frac..frac).map(|x| x as f32 * h) {
-            draw_square(xoff, yoff, w, random_range(5., 15.), TAU * random_f32(), &draw);
+            draw_square(
+                xoff,
+                yoff,
+                w,
+                7.,
+                model
+                    .perlin
+                    .get([xoff as f64 * 0.001, yoff as f64 * 0.001, model.counter])
+                    as f32
+                    * TAU,
+                &draw,
+            );
         }
     }
+
     // Write to the window frame.
     draw.to_frame(app, &frame).unwrap();
 }
