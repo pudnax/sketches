@@ -1,8 +1,6 @@
 extern crate nannou;
 use nannou::prelude::*;
 
-mod angle_iter;
-
 const WIDTH: f32 = 1024.;
 const HEIGHT: f32 = 800.;
 

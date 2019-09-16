@@ -1,93 +1,7 @@
-use nannou::noise::NoiseFn;
 use nannou::prelude::*;
 
-fn main() {
-    nannou::app(model).update(update).run();
-}
 
-struct Model {
-    _window: window::Id,
-    perlin: nannou::noise::Perlin,
-    counter: f64,
-}
-
-fn model(app: &App) -> Model {
-    // app.set_loop_mode(LoopMode::wait(1));
-    let _window = app
-        .new_window()
-        .with_dimensions(720, 720)
-        .view(view)
-        .event(window_event)
-        .build()
-        .unwrap();
-    Model {
-        _window,
-        perlin: nannou::noise::Perlin::new(),
-        counter: 0.,
-    }
-}
-
-fn update(_app: &App, model: &mut Model, _update: Update) {
-    model.counter += 0.005;
-}
-
-fn window_event(_app: &App, _model: &mut Model, event: WindowEvent) {
-    match event {
-        KeyPressed(_key) => {}
-        KeyReleased(_key) => {}
-        MouseMoved(_pos) => {}
-        MousePressed(_button) => {}
-        MouseReleased(_button) => {}
-        MouseEntered => {}
-        MouseExited => {}
-        MouseWheel(_amount, _phase) => {}
-        Moved(_pos) => {}
-        Resized(_size) => {}
-        Touch(_touch) => {}
-        TouchPressure(_pressure) => {}
-        HoveredFile(_path) => {}
-        DroppedFile(_path) => {}
-        HoveredFileCancelled => {}
-        Focused => {}
-        Unfocused => {}
-        Closed => {}
-    }
-}
-
-fn view(app: &App, model: &Model, frame: &Frame) {
-    // Prepare to draw.
-    let draw = app.draw();
-    // Clear the background to pink.
-    draw.background().color(BLACK);
-    // Draw a red ellipse with default size and position.
-
-    let win = app.window_rect();
-    let frac = 20;
-    let w = win.w() / frac as f32;
-    let h = win.h() / frac as f32;
-
-    for xoff in (-frac..frac).map(|x| x as f32 * w) {
-        for yoff in (-frac..frac).map(|x| x as f32 * h) {
-            draw_square(
-                xoff,
-                yoff,
-                w,
-                7.,
-                model
-                    .perlin
-                    .get([xoff as f64 * 0.001, yoff as f64 * 0.001, model.counter])
-                    as f32
-                    * TAU,
-                &draw,
-            );
-        }
-    }
-
-    // Write to the window frame.
-    draw.to_frame(app, &frame).unwrap();
-}
-
-fn encode_endpoint(x: f32, y: f32, clipx: f32, clipy: f32, clipw: f32, cliph: f32) -> usize {
+pub fn encode_endpoint(x: f32, y: f32, clipx: f32, clipy: f32, clipw: f32, cliph: f32) -> usize {
     let mut code = 0;
 
     let xmin = clipx;
@@ -110,7 +24,7 @@ fn encode_endpoint(x: f32, y: f32, clipx: f32, clipy: f32, clipw: f32, cliph: f3
     code
 }
 
-fn line_clipped(
+pub fn line_clipped(
     mut x0: f32,
     mut y0: f32,
     mut x1: f32,
@@ -197,7 +111,7 @@ fn line_clipped(
     accept
 }
 
-fn draw_square(x: f32, y: f32, w: f32, step: f32, a: f32, draw: &nannou::app::Draw) {
+pub fn draw_square(x: f32, y: f32, w: f32, step: f32, a: f32, draw: &nannou::app::Draw) {
     let xstart = x + w / 2.;
     let ystart = y + w / 2.;
     // let xstart = x + random_range(0., w);

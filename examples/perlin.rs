@@ -2,7 +2,7 @@ extern crate nannou;
 use nannou::noise::NoiseFn;
 use nannou::prelude::*;
 
-mod angle_iter;
+use std::convert::From;
 
 const WIDTH: f32 = 1024.;
 const HEIGHT: f32 = 800.;
@@ -67,8 +67,8 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     draw.background().color(BLACK);
     // Draw a red ellipse with default size and position.
 
-    for i in angle_iter::linspace(-WIDTH / 2., WIDTH / 2., 50) {
-        for j in angle_iter::linspace(-HEIGHT / 2., HEIGHT / 2., 50) {
+    for i in linspace(-WIDTH / 2., WIDTH / 2., 50) {
+        for j in linspace(-HEIGHT / 2., HEIGHT / 2., 50) {
             draw.ellipse().x_y(i, j).w_h(5., 5.);
             draw.line()
                 .xy([i, j].into())
@@ -85,4 +85,11 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     }
     // Write to the window frame.
     draw.to_frame(app, &frame).unwrap();
+}
+
+fn linspace(start: f32, stop: f32, nstep: u32) -> Vec<f32> {
+    let delta: f32 = (stop - start) / f32::from_u32(nstep - 1).expect("out of range");
+    (0..(nstep))
+        .map(|i| start + f32::from_u32(i).expect("out of range") * delta)
+        .collect()
 }

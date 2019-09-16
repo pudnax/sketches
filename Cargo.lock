@@ -1529,7 +1529,6 @@ dependencies = [
  "nannou_audio 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nannou_laser 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nannou_osc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "num 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rstar 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "vulkano 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
