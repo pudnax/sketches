@@ -126,6 +126,6 @@ impl Circle {
         if dist <= (self.r + c.r + MARGIN).powi(2) {
             return true;
         }
-        return false;
+        false
     }
 }

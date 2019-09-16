@@ -107,8 +107,6 @@ impl PoissonDisk {
         // Initialize an n-dimensional background grid for storing samples
         let dim = 2.;
 
-        // We choose cell size to be radius / (dimensions) so that we
-        // are guaranteed to have at most one point in any given cell.
         let cell_size = radius as f64 / (dim as f64).sqrt();
         let cell_width = (width as f64 / cell_size).ceil() + 1.0;
         let cell_height = (height as f64 / cell_size).ceil() + 1.0;

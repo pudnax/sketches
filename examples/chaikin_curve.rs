@@ -110,10 +110,7 @@ fn chaikin(shape: Vec<Point2>, ratio: f32, iterations: usize, close: bool) -> Ve
      * Step 1: Figure out how many corners the shape has
      *         depending on whether it's open or closed.
      */
-    let mut num_corners = shape.len();
-    if !close {
-        num_corners = shape.len() - 1;
-    }
+    let num_corners = if !close { shape.len() - 1 } else { shape.len() };
 
     /*
      * Step 2: Since we don't have access to edges directly

@@ -15,9 +15,11 @@ struct Model {
 }
 
 fn model(app: &App) -> Model {
-    let name = "gray.png";
+    let name = "out61.png";
     let image = image::open(name).unwrap();
+
     let image2 = image::open(name).unwrap();
+
     let (w, h) = image.dimensions();
 
     let _window = app
@@ -29,7 +31,7 @@ fn model(app: &App) -> Model {
         .unwrap();
     Model {
         _window,
-        poise: PoissonDisk::new(4, 10, image2),
+        poise: PoissonDisk::new(4, 20, image2),
         image,
         h,
     }
@@ -74,7 +76,7 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     for p in &model.poise.samples {
         let fraction =
             1. - model.image.get_pixel(p.0 as u32, model.h - 1 - p.1 as u32)[0] as f32 / 255.;
-        let size = 0.5 + fraction * 3.5;
+        let size = map_range(fraction, 0., 1., 1.5, 2.9);
         draw.ellipse()
             .x_y(p.0 as f32 - win.w() / 2., p.1 as f32 - win.h() / 2.)
             .color(BLACK)
