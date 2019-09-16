@@ -4,7 +4,7 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
-const MARGIN: f32 = -5.;
+const MARGIN: f32 = 0.;
 const _MAX_R: f32 = 40.;
 const _MIN_R: f32 = 5.;
 
@@ -42,7 +42,7 @@ fn model(app: &App) -> Model {
         _window,
         circles: Vec::new(),
         failed_tries: 0,
-        current_radius: 20.,
+        current_radius: 40.,
     }
 }
 
@@ -118,7 +118,7 @@ impl Circle {
         draw.ellipse()
             .color(self.col)
             .x_y(self.x, self.y)
-            .w_h(2. * self.r, 2. * self.r);
+            .radius(self.r);
     }
 
     fn collides(&self, c: &Circle) -> bool {

@@ -139,7 +139,7 @@ impl Circle {
         draw.ellipse()
             .color(self.col)
             .x_y(self.x, self.y)
-            .w_h(2. * self.r, 2. * self.r);
+            .radius(self.r);
     }
 
     fn collides(&self, c: &Circle) -> bool {
