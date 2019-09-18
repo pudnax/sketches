@@ -49,6 +49,8 @@ fn view(app: &App, model: &Model, frame: &Frame) {
 
     let grid = square_fill(left, down, w, 20., 10.);
 
+    let arr = vec![pt2(left / 2., 0.), pt2(0., 0.), pt2(right / 2., 0.)];
+
     let weight = 10. * t.cos();
     match frame.window_id() {
         id if id == model.a => {}
@@ -56,17 +58,17 @@ fn view(app: &App, model: &Model, frame: &Frame) {
             draw.background().color(BLACK);
             draw.ellipse().color(BLACK).w_h(1., 10.);
 
-            // for seq in grid {
-            //     draw.polyline().weight(10. * t.cos()).points(seq);
+            // for seq in arr {
+            // draw.polyline().weight(10. * t.cos()).points(arr);
             // }
             let mut tris = Vec::new();
-            for seq in grid.iter().skip(10).take(10) {
+            for seq in grid {
                 tris.extend(
                     // grid[20]
                     seq.windows(2)
                         .flat_map(|slice| {
-                            let theta = (slice[1] - slice[0]).angle() + TAU;
-                            let dev = pt2(weight * theta.cos(), weight * theta.sin());
+                            let theta = (slice[1] - slice[0]).angle() + TAU / 4.;
+                            let dev = pt2(weight * theta.sin(), weight * theta.cos());
                             let a = slice[0] + dev;
                             let b = slice[0] - dev;
                             let c = slice[1] + dev;
