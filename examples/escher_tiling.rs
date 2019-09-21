@@ -15,8 +15,8 @@ fn view(app: &App, frame: &Frame) {
 
     let (w, h) = app.window_rect().w_h();
 
-    let frac = 8.;
-    let lines = quad_fill(0., 0., w / frac, h / frac, 15., 0.5 + t * 0.025);
+    let frac = 10.;
+    let lines = quad_fill(0., 0., w / frac, h / frac, 10., 1. + t * 0.05);
     // Here applies complex function
     mesh_from_arr(&lines, &draw, 0.05);
 
