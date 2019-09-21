@@ -179,8 +179,8 @@ pub fn line_clipped(
     None
 }
 
-pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<Vector2>> {
-    let lenght = (w * w + h * h).sqrt();
+pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> Vec<Vec<Vector2>> {
+    let lenght = (width * width + height * height).sqrt();
     let num_steps = lenght / (2. * step);
 
     let num_points = 30;
@@ -194,7 +194,7 @@ pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<V
     let mut x1 = x + -lenght / 2. * a.cos();
     let mut y0 = y + lenght / 2. * a.sin();
     let mut y1 = y + -lenght / 2. * a.sin();
-    if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - w / 2., y - h / 2., w, h) {
+    if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - width / 2., y - height / 2., width, height) {
         arr.push(
             (0..num_points)
                 .map(|i| {
@@ -204,12 +204,12 @@ pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<V
                 .collect::<Vec<_>>(),
         )
     }
-    for i in 0..num_steps as usize {
+    for _ in 0..num_steps as usize {
         x0 += step * norm[0];
         x1 += step * norm[0];
         y0 += step * norm[1];
         y1 += step * norm[1];
-        if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - w / 2., y - h / 2., w, h) {
+        if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - width / 2., y - height / 2., width, height) {
             arr.push(
                 (0..num_points)
                     .map(|i| {
@@ -224,10 +224,10 @@ pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<V
             -y0 + 2. * y,
             -x1 + 2. * x,
             -y1 + 2. * y,
-            x - w / 2.,
-            y - h / 2.,
-            w,
-            h,
+            x - width / 2.,
+            y - height / 2.,
+            width,
+            height,
         ) {
             arr.push(
                 (0..num_points)
@@ -243,7 +243,7 @@ pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<V
     arr
 }
 
-fn mesh_from_arr(arr: &Vec<Vec<Vector2>>, draw: &nannou::app::Draw, weight: f32) {
+fn mesh_from_arr(arr: &[Vec<Vector2>], draw: &nannou::app::Draw, weight: f32) {
     for line in arr {
         let num_points = line.len();
         let tris = line
