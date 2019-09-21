@@ -1,12 +1,13 @@
 use nannou::prelude::*;
 
+extern crate num_complex;
+
 fn main() {
     nannou::sketch(view);
 }
 
 fn view(app: &App, frame: &Frame) {
     // Begin drawing
-    let win = app.window_rect();
     let draw = app.draw();
     let t = app.time;
 
@@ -14,19 +15,10 @@ fn view(app: &App, frame: &Frame) {
 
     let (w, h) = app.window_rect().w_h();
 
-    let lines = quad_fill(0., 0., w, h, 20., t * 0.1);
-    let lines = lines
-        .iter()
-        .map(|line| {
-            line.iter()
-                .map(|&p| {
-                    let (x, y) = (p.x * 0.1, p.y * 0.1);
-                    pt2(x.exp() * y.cos(), x.exp() * y.sin())
-                })
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
-    mesh_from_arr(&lines, &draw, 5.);
+    let frac = 8.;
+    let lines = quad_fill(0., 0., w / frac, h / frac, 15., 0.5 + t * 0.025);
+    // Here applies complex function
+    mesh_from_arr(&lines, &draw, 0.05);
 
     // Write the result of our drawing to the window's frame.
     draw.to_frame(app, &frame).unwrap();
@@ -145,7 +137,7 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
     let lenght = (width * width + height * height).sqrt();
     let num_steps = lenght / (2. * step);
 
-    let num_points = 200;
+    let num_points = 1500;
 
     let mut arr = Vec::new();
 
@@ -224,11 +216,20 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
 }
 
 fn mesh_from_arr(arr: &[Vec<Vector2>], draw: &nannou::app::Draw, weight: f32) {
+    let cfunc = |points: [Vector2; 4]| {
+        let mut res = [pt2(0., 0.); 4];
+        for (i, p) in points.iter().enumerate() {
+            let mut acc = num_complex::Complex::new(p.x, p.y);
+            acc = 0.001 * acc.exp();
+            res[i] = pt2(acc.re, acc.im);
+        }
+        res
+    };
+
     for line in arr {
         let num_points = line.len();
         let tris = line
             .windows(2)
-            // .iter()
             .flat_map(|slice| {
                 let dev = (slice[1] - slice[0]).angle() + TAU / 4.;
                 let dev = pt2(weight * dev.cos(), weight * dev.sin());
@@ -236,6 +237,7 @@ fn mesh_from_arr(arr: &[Vec<Vector2>], draw: &nannou::app::Draw, weight: f32) {
                 let b = slice[0] - dev;
                 let c = slice[1] + dev;
                 let d = slice[1] - dev;
+                let [a, b, c, d] = cfunc([a, b, c, d]);
                 geom::Quad([a, c, d, b]).triangles_iter()
             })
             .enumerate()
