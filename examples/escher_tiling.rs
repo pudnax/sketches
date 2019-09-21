@@ -1,13 +1,45 @@
 use nannou::prelude::*;
 
+use std::time::Duration;
+
+mod screenshot;
+
+use screenshot::Shots;
+
+struct Model {
+    screenshot: Shots,
+    capture: bool,
+    counter: usize,
+}
+
 extern crate num_complex;
 
 fn main() {
-    nannou::sketch(view);
+    nannou::app(model).update(update).exit(exit).run();
 }
 
-fn view(app: &App, frame: &Frame) {
-    // Begin drawing
+fn model(app: &App) -> Model {
+    let window_id = app
+        .new_window()
+        .with_dimensions(1024, 768)
+        .view(view)
+        .event(window_event)
+        .build()
+        .unwrap();
+    let screenshot = screenshot::new(app, window_id);
+    Model {
+        screenshot,
+        capture: true,
+        counter: 0,
+    }
+}
+
+fn update(app: &App, model: &mut Model, _update: Update) {
+    let t = app.time;
+    model.counter += 1;
+}
+
+fn view(app: &App, model: &Model, frame: &Frame) {
     let draw = app.draw();
     let t = app.time;
 
@@ -15,13 +47,17 @@ fn view(app: &App, frame: &Frame) {
 
     let (w, h) = app.window_rect().w_h();
 
-    let frac = 10.;
-    let lines = quad_fill(0., 0., w / frac, h / frac, 10., 1. + t * 0.05);
+    let frac = 6.;
+    let lines = quad_fill(0., 0., w / frac, h / frac, 3., 1. + t * 0.025);
     // Here applies complex function
     mesh_from_arr(&lines, &draw, 0.05);
 
-    // Write the result of our drawing to the window's frame.
     draw.to_frame(app, &frame).unwrap();
+
+    if model.capture && model.counter % 2 == 0 {
+        model.screenshot.capture(&frame);
+        model.screenshot.take();
+    }
 }
 
 pub fn encode_endpoint(x: f32, y: f32, clipx: f32, clipy: f32, clipw: f32, cliph: f32) -> usize {
@@ -137,7 +173,7 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
     let lenght = (width * width + height * height).sqrt();
     let num_steps = lenght / (2. * step);
 
-    let num_points = 1500;
+    let num_points = 1000;
 
     let mut arr = Vec::new();
 
@@ -253,4 +289,38 @@ fn mesh_from_arr(arr: &[Vec<Vector2>], draw: &nannou::app::Draw, weight: f32) {
 
         draw.mesh().tris(tris);
     }
+}
+
+fn window_event(_app: &App, model: &mut Model, event: WindowEvent) {
+    match event {
+        KeyPressed(key) => {
+            if let Key::S = key {
+                // Adds a screenshot to the queue to be taken
+                model.screenshot.take();
+            }
+        }
+        KeyReleased(_key) => {}
+        MouseMoved(_pos) => {}
+        MousePressed(_button) => {}
+        MouseReleased(_button) => {}
+        MouseEntered => {}
+        MouseExited => {}
+        MouseWheel(_amount, _phase) => {}
+        Moved(_pos) => {}
+        Resized(_size) => {}
+        Touch(_touch) => {}
+        TouchPressure(_pressure) => {}
+        HoveredFile(_path) => {}
+        DroppedFile(_path) => {}
+        HoveredFileCancelled => {}
+        Focused => {}
+        Unfocused => {}
+        Closed => {}
+    }
+}
+
+fn exit(_: &App, model: Model) {
+    // If you are getting an Access error then you
+    // might need to raise the wait time
+    model.screenshot.flush(Duration::from_secs(3));
 }
