@@ -10,47 +10,9 @@ fn view(app: &App, frame: &Frame) {
     let draw = app.draw();
     let t = app.time;
 
-    // Clear the background to blue.
     draw.background().color(BLACK);
 
-    // Use the mouse position to affect the frequency and amplitude.
     let (w, h) = app.window_rect().w_h();
-    let (left, right, down, up) = (-w / 2., w / 2., -h / 2., h / 2.);
-    let hx = map_range(app.mouse.x, win.left(), win.right(), 0.0, w / 2.);
-    let hy = map_range(app.mouse.y, win.bottom(), win.top(), 0.0, h / 2.);
-    let amp = app.mouse.y;
-
-    let (x, y) = (app.mouse.x, app.mouse.y);
-    let num_points = 16;
-
-    let weight = 5.;
-    let line = (0..num_points)
-        .map(|i| pt2(0., 0.).lerp(pt2(x, y), i as f32 / (num_points - 1) as f32))
-        .collect::<Vec<_>>();
-    let tris = line
-        .windows(2)
-        // .iter()
-        .flat_map(|slice| {
-            let dev = (slice[1] - slice[0]).angle() + TAU / 4.;
-            let dev = pt2(weight * dev.cos(), weight * dev.sin());
-            let a = slice[0] + dev;
-            let b = slice[0] - dev;
-            let c = slice[1] + dev;
-            let d = slice[1] - dev;
-            geom::Quad([a, c, d, b]).triangles_iter()
-        })
-        .enumerate()
-        .map(|(i, tri)| {
-            let i = i as f32 / num_points as f32;
-            let mut j = 0.;
-            tri.map_vertices(|v| {
-                let color = srgba(map_range(j, 0., 3., 0., 1.), i, 1. - i, 1.0);
-                j += 1.;
-                geom::vertex::Srgba(v, color)
-            })
-        });
-
-    draw.mesh().tris(tris);
 
     let lines = quad_fill(0., 0., w, h, 20., t * 0.1);
     let lines = lines
@@ -183,7 +145,7 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
     let lenght = (width * width + height * height).sqrt();
     let num_steps = lenght / (2. * step);
 
-    let num_points = 30;
+    let num_points = 200;
 
     let mut arr = Vec::new();
 
@@ -194,7 +156,16 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
     let mut x1 = x + -lenght / 2. * a.cos();
     let mut y0 = y + lenght / 2. * a.sin();
     let mut y1 = y + -lenght / 2. * a.sin();
-    if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - width / 2., y - height / 2., width, height) {
+    if let Some((start, end)) = line_clipped(
+        x0,
+        y0,
+        x1,
+        y1,
+        x - width / 2.,
+        y - height / 2.,
+        width,
+        height,
+    ) {
         arr.push(
             (0..num_points)
                 .map(|i| {
@@ -209,7 +180,16 @@ pub fn quad_fill(x: f32, y: f32, width: f32, height: f32, step: f32, a: f32) -> 
         x1 += step * norm[0];
         y0 += step * norm[1];
         y1 += step * norm[1];
-        if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - width / 2., y - height / 2., width, height) {
+        if let Some((start, end)) = line_clipped(
+            x0,
+            y0,
+            x1,
+            y1,
+            x - width / 2.,
+            y - height / 2.,
+            width,
+            height,
+        ) {
             arr.push(
                 (0..num_points)
                     .map(|i| {
