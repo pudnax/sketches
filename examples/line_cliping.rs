@@ -62,7 +62,7 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     // Draw a red ellipse with default size and position.
 
     let win = app.window_rect();
-    let frac = 20;
+    let frac = 50;
     let w = win.w() / frac as f32;
     let h = win.h() / frac as f32;
 

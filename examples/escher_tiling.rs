@@ -1,99 +1,73 @@
 use nannou::prelude::*;
 
-extern crate num_complex;
-
 fn main() {
-    nannou::app(model).update(update).view(view).run();
+    nannou::sketch(view);
 }
 
-struct Model {
-    a: WindowId,
-    b: WindowId,
-}
-
-fn model(app: &App) -> Model {
-    // app.set_loop_mode(LoopMode::wait(3));
-
-    let a = app
-        .new_window()
-        .with_title("window a")
-        .event(event_a)
-        .build()
-        .unwrap();
-    let b = app
-        .new_window()
-        .with_title("window b")
-        .event(event_b)
-        .build()
-        .unwrap();
-
-    Model { a, b }
-}
-
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
-
-fn event_a(_app: &App, _model: &mut Model, event: WindowEvent) {
-    // println!("window a: {:?}", event);
-}
-
-fn event_b(_app: &App, _model: &mut Model, event: WindowEvent) {
-    // println!("window b: {:?}", event);
-}
-
-fn view(app: &App, model: &Model, frame: &Frame) {
-    let draw = app.draw_for_window(frame.window_id()).unwrap();
+fn view(app: &App, frame: &Frame) {
+    // Begin drawing
+    let win = app.window_rect();
+    let draw = app.draw();
     let t = app.time;
 
+    // Clear the background to blue.
+    draw.background().color(BLACK);
+
+    // Use the mouse position to affect the frequency and amplitude.
     let (w, h) = app.window_rect().w_h();
-    let (left, right, up, down) = (-w / 2., w / 2., h / 2., -h / 2.);
+    let (left, right, down, up) = (-w / 2., w / 2., -h / 2., h / 2.);
+    let hx = map_range(app.mouse.x, win.left(), win.right(), 0.0, w / 2.);
+    let hy = map_range(app.mouse.y, win.bottom(), win.top(), 0.0, h / 2.);
+    let amp = app.mouse.y;
 
-    let grid = square_fill(left, down, w, 20., 10.);
+    let (x, y) = (app.mouse.x, app.mouse.y);
+    let num_points = 16;
 
-    let arr = vec![pt2(left / 2., 0.), pt2(0., 0.), pt2(right / 2., 0.)];
+    let weight = 5.;
+    let line = (0..num_points)
+        .map(|i| pt2(0., 0.).lerp(pt2(x, y), i as f32 / (num_points - 1) as f32))
+        .collect::<Vec<_>>();
+    let tris = line
+        .windows(2)
+        // .iter()
+        .flat_map(|slice| {
+            let dev = (slice[1] - slice[0]).angle() + TAU / 4.;
+            let dev = pt2(weight * dev.cos(), weight * dev.sin());
+            let a = slice[0] + dev;
+            let b = slice[0] - dev;
+            let c = slice[1] + dev;
+            let d = slice[1] - dev;
+            geom::Quad([a, c, d, b]).triangles_iter()
+        })
+        .enumerate()
+        .map(|(i, tri)| {
+            let i = i as f32 / num_points as f32;
+            let mut j = 0.;
+            tri.map_vertices(|v| {
+                let color = srgba(map_range(j, 0., 3., 0., 1.), i, 1. - i, 1.0);
+                j += 1.;
+                geom::vertex::Srgba(v, color)
+            })
+        });
 
-    let weight = 10. * t.cos();
-    match frame.window_id() {
-        id if id == model.a => {}
-        id if id == model.b => {
-            draw.background().color(BLACK);
-            draw.ellipse().color(BLACK).w_h(1., 10.);
+    draw.mesh().tris(tris);
 
-            // for seq in arr {
-            // draw.polyline().weight(10. * t.cos()).points(arr);
-            // }
-            let mut tris = Vec::new();
-            for seq in grid {
-                tris.extend(
-                    // grid[20]
-                    seq.windows(2)
-                        .flat_map(|slice| {
-                            let theta = (slice[1] - slice[0]).angle() + TAU / 4.;
-                            let dev = pt2(weight * theta.sin(), weight * theta.cos());
-                            let a = slice[0] + dev;
-                            let b = slice[0] - dev;
-                            let c = slice[1] + dev;
-                            let d = slice[1] - dev;
-                            geom::Quad([a, b, c, d]).triangles_iter()
-                        })
-                        .map(|tri| {
-                            // Color the vertices based on their amplitude.
-                            tri.map_vertices(|v| {
-                                let color = srgba(0.5, 0.5, 0.5, 1.0);
-                                geom::vertex::Srgba(v, color)
-                            })
-                        }),
-                );
-            }
+    let lines = quad_fill(0., 0., w, h, 20., t * 0.1);
+    let lines = lines
+        .iter()
+        .map(|line| {
+            line.iter()
+                .map(|&p| {
+                    let (x, y) = (p.x * 0.1, p.y * 0.1);
+                    pt2(x.exp() * y.cos(), x.exp() * y.sin())
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    mesh_from_arr(&lines, &draw, 5.);
 
-            draw.mesh().tris(tris);
-        }
-        _ => (),
-    }
-    draw.to_frame(app, frame).unwrap();
-}
-
-fn lerp(v0: f64, v1: f64, d: f64) -> f64 {
-    v0 + (v1 - v0) * d.max(0.).min(1.)
+    // Write the result of our drawing to the window's frame.
+    draw.to_frame(app, &frame).unwrap();
 }
 
 pub fn encode_endpoint(x: f32, y: f32, clipx: f32, clipy: f32, clipw: f32, cliph: f32) -> usize {
@@ -205,87 +179,96 @@ pub fn line_clipped(
     None
 }
 
-pub fn square_fill(x: f32, y: f32, w: f32, step: f32, a: f32) -> Vec<Vec<Vector2>> {
-    let xstart = x + w / 2.;
-    let ystart = y + w / 2.;
-    // let xstart = x + random_range(0., w);
-    // let ystart = y + random_range(0., w);
+pub fn quad_fill(x: f32, y: f32, w: f32, h: f32, step: f32, a: f32) -> Vec<Vec<Vector2>> {
+    let lenght = (w * w + h * h).sqrt();
+    let num_steps = lenght / (2. * step);
 
-    let slope = a.tan();
-    let c = ystart - slope * xstart;
-
-    let mut down_accept = true;
-    let mut up_accept = true;
-
-    let mut i = 0;
+    let num_points = 30;
 
     let mut arr = Vec::new();
 
-    //for (int i = 0; i < w / step; i++) {
-    while down_accept || up_accept {
-        let mut x0 = x - w / 2.;
-        let mut y0 = slope * x0 + c + i as f32 * step / a.cos();
-        let mut x1 = x + w + w / 2.;
-        let mut y1 = slope * x1 + c + i as f32 * step / a.cos();;
-        match line_clipped(x0, y0, x1, y1, x, y, w, w) {
-            Some((x, y)) => {
-                up_accept = true;
-                let num_poinst = 10;
-                let vertices = (0..num_poinst)
+    let rot = a + TAU / 4.;
+    let rlen = 1.;
+    let norm = pt2(rot.cos() / rlen, rot.sin() / rlen);
+    let mut x0 = x + lenght / 2. * a.cos();
+    let mut x1 = x + -lenght / 2. * a.cos();
+    let mut y0 = y + lenght / 2. * a.sin();
+    let mut y1 = y + -lenght / 2. * a.sin();
+    if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - w / 2., y - h / 2., w, h) {
+        arr.push(
+            (0..num_points)
+                .map(|i| {
+                    pt2(start[0], start[1])
+                        .lerp(pt2(end[0], end[1]), i as f32 / (num_points - 1) as f32)
+                })
+                .collect::<Vec<_>>(),
+        )
+    }
+    for i in 0..num_steps as usize {
+        x0 += step * norm[0];
+        x1 += step * norm[0];
+        y0 += step * norm[1];
+        y1 += step * norm[1];
+        if let Some((start, end)) = line_clipped(x0, y0, x1, y1, x - w / 2., y - h / 2., w, h) {
+            arr.push(
+                (0..num_points)
                     .map(|i| {
-                        let frac = i as f32 / num_poinst as f32;
-                        pt2(x[0], x[1]).lerp(pt2(y[0], y[1]), frac)
+                        pt2(start[0], start[1])
+                            .lerp(pt2(end[0], end[1]), i as f32 / (num_points - 1) as f32)
                     })
-                    .collect();
-                arr.push(vertices);
-            }
-            None => up_accept = false,
-        };
-
-        x0 = x - w / 2.;
-        y0 = slope * x0 + c - i as f32 * step / a.cos();
-        x1 = x + w + w / 2.;
-        y1 = slope * x1 + c - i as f32 * step / a.cos();
-        match line_clipped(x0, y0, x1, y1, x, y, w, w) {
-            Some((x, y)) => {
-                down_accept = true;
-                let num_poinst = 10;
-                let vertices = (0..num_poinst)
+                    .collect::<Vec<_>>(),
+            )
+        }
+        if let Some((start, end)) = line_clipped(
+            -x0 + 2. * x,
+            -y0 + 2. * y,
+            -x1 + 2. * x,
+            -y1 + 2. * y,
+            x - w / 2.,
+            y - h / 2.,
+            w,
+            h,
+        ) {
+            arr.push(
+                (0..num_points)
                     .map(|i| {
-                        let frac = i as f32 / num_poinst as f32;
-                        pt2(x[0], x[1]).lerp(pt2(y[0], y[1]), frac)
+                        pt2(start[0], start[1])
+                            .lerp(pt2(end[0], end[1]), i as f32 / (num_points - 1) as f32)
                     })
-                    .collect();
-                arr.push(vertices);
-            }
-            None => down_accept = false,
-        };
-        i += 1;
+                    .collect::<Vec<_>>(),
+            )
+        }
     }
 
     arr
 }
 
-pub fn mesh_from_arr(arr: &[Vec<Vector2>], weight: f32, draw: &nannou::app::Draw) {
-    for seq in arr {
-        let tris = seq
+fn mesh_from_arr(arr: &Vec<Vec<Vector2>>, draw: &nannou::app::Draw, weight: f32) {
+    for line in arr {
+        let num_points = line.len();
+        let tris = line
             .windows(2)
+            // .iter()
             .flat_map(|slice| {
-                let theta = (slice[1] - slice[0]).angle();
-                let dev = pt2(weight * theta.cos(), weight * theta.sin());
+                let dev = (slice[1] - slice[0]).angle() + TAU / 4.;
+                let dev = pt2(weight * dev.cos(), weight * dev.sin());
                 let a = slice[0] + dev;
-                let b = slice[1] - dev;
-                let c = slice[0] + dev;
+                let b = slice[0] - dev;
+                let c = slice[1] + dev;
                 let d = slice[1] - dev;
-                geom::Quad([a, b, c, d]).triangles_iter()
+                geom::Quad([a, c, d, b]).triangles_iter()
             })
-            .map(|tri| {
-                // Color the vertices based on their amplitude.
+            .enumerate()
+            .map(|(i, tri)| {
+                let i = i as f32 / num_points as f32;
+                let mut j = 0.;
                 tri.map_vertices(|v| {
-                    let color = srgba(0.5, 0.5, 0.5, 1.0);
+                    let color = srgba(map_range(j, 0., 3., 0., 1.), i, 1. - i, 1.0);
+                    j += 1.;
                     geom::vertex::Srgba(v, color)
                 })
             });
+
         draw.mesh().tris(tris);
     }
 }
