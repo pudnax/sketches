@@ -35,7 +35,6 @@ fn model(app: &App) -> Model {
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    let t = app.time;
     model.counter += 1;
 }
 
