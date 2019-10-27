@@ -64,6 +64,7 @@ fn view(app: &App, model: &Model, frame: &Frame) {
         pt2(25., 25.),
         pt2(50., -50.),
         pt2(150., 150.),
+        pt2(200., -200.),
     ];
     draw.polyline().weight(5.).points(
         chaikin_open(points, 0.05, model.counter / 50)

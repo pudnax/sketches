@@ -64,7 +64,7 @@ fn model(app: &App) -> Model {
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    for _ in 0..10 {
+    for _ in 0..20 {
         let (w, h) = app.window_rect().w_h();
         let aspt = Circle::new(
             random_range(-w / 2., w / 2.),
