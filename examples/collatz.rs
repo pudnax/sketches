@@ -14,31 +14,39 @@ fn view(app: &App, frame: &Frame) {
 
     let (w, h) = app.window_rect().w_h();
 
-    let n = 100;
-    let points = (0..n)
-        .map(|x| map_range(x as f32, 0., n as f32, -w / 2., w / 2.))
-        .collect::<Vec<_>>();
+    let frac = map_range(app.mouse.x, -w / 2., w / 2., 0., 1.);
 
-    let points = points.iter().map(|&x| Collatz::new(x).collect::<Vec<_>>());
+    let n = 11000;
+    let points = 10000..n;
+
+    let points = points.map(|x| {
+        Collatz::new(x as f32)
+            .collect::<Vec<f32>>()
+            .iter()
+            .rev()
+            .map(|&x| x)
+            .collect::<Vec<f32>>()
+    });
 
     for series in points {
-        let mut y = h / 2.;
-        for p in series {
-            draw.ellipse().x_y(p, y).w_h(5., 5.);
-            y -= 10.;
+        let mut y = -h / 2.;
+        let mut x = 0.;
+        for p in series.windows(2) {
+            let div = (p[0] - p[1]).abs() / p[0];
+            let y0 = y;
+            let y1 = y + 8. * (div);
+            let x0 = x;
+            let step = 15. * div;
+            // let step = map_range(app.mouse.x, -w / 2., w / 2., 1., 15.);
+            let x1 = if p[1] % 2. == 0. { x - step } else { x + step };
+            draw.line().points(pt2(x0, y0), pt2(x1, y1));
+            y = y1;
+            x = x1;
         }
     }
 
     // Write to the window frame.
     draw.to_frame(app, &frame).unwrap();
-}
-
-fn collatz(x: &f32) -> f32 {
-    if x % 2. == 0. {
-        x / 2.
-    } else {
-        (3. * x + 1.) / 2.
-    }
 }
 
 struct Collatz {
