@@ -25,7 +25,7 @@ fn model(app: &App) -> Model {
 
     Model {
         _window,
-        points: vec![Cell::new()],
+        points: vec![Cell::new(-20., 0.), Cell::new(20., 0.)],
     }
 }
 
@@ -39,9 +39,17 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         if x.bounce() {
             x.vel *= vel;
             x.vel = x.vel.normalize() * magn;
-            acc.push(x.replicate());
         }
     });
+
+    for i in 0..model.points.len() {
+        for j in 0..model.points.len() {
+            let aspt = model.points[j];
+            if model.points[i].collides(&aspt) {
+                acc.push(aspt.replicate());
+            }
+        }
+    }
 
     model.points.append(&mut acc);
 }
@@ -89,12 +97,23 @@ struct Cell {
 }
 
 impl Cell {
-    fn new() -> Cell {
+    fn new(x: f32, y: f32) -> Cell {
+        let offx = random_f32();
+        let offy = random_f32();
         Cell {
-            pos: pt2(0., 0.),
-            vel: pt2(1.1, -1.1),
-            r: 10.,
+            pos: pt2(x, y),
+            vel: pt2(1.1 * offx, -1.1 * offy),
+            r: 5.,
         }
+    }
+
+    fn collides(&self, c: &Cell) -> bool {
+        let dist = (c.pos.x - self.pos.x) * (c.pos.x - self.pos.x)
+            + (c.pos.y - self.pos.y) * (c.pos.y - self.pos.y);
+        if dist <= (self.r + c.r).powi(2) {
+            return true;
+        }
+        false
     }
 
     fn bounce(&self) -> bool {
@@ -102,13 +121,14 @@ impl Cell {
     }
 
     fn replicate(&self) -> Cell {
-        let offx = random_f32() * self.r;
-        let offy = random_f32() * self.r;
+        let offx = 2. * random_f32() - 1.;
+        let offy = 2. * random_f32() - 1.;
+        let off = pt2(offx, offy).normalize() * self.r;
         let (x, y) = (self.vel.x, self.vel.y);
 
         Cell {
-            pos: self.pos,
-            vel: pt2(x + offx, y + offy),
+            pos: pt2(x + off.x, y + off.y),
+            vel: self.vel,
             r: self.r,
         }
     }

@@ -315,7 +315,7 @@ impl std::ops::Index<usize> for Vec3d {
 //     }
 // }
 
-pub trait Scalar: Copy {
+pub trait Scalar: Copy + std::ops::Div + std::ops::Mul + std::ops::Rem {
     fn float(self) -> f64;
 }
 

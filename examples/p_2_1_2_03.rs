@@ -10,6 +10,8 @@ fn view(app: &App, frame: &Frame) {
     let max_distance = 500.;
     draw.background().color(PLUM);
 
+    let t = app.time;
+
     let win = app.window_rect();
 
     let w_sep = (win.w() / 25.) as i32;
@@ -17,7 +19,9 @@ fn view(app: &App, frame: &Frame) {
 
     for xoff in (-w_sep..w_sep).map(|x| x as f32 * win.w() / 25.) {
         for yoff in (-h_sep..h_sep).map(|x| x as f32 * win.h() / 25.) {
-            let mut diameter = pt2(app.mouse.x, app.mouse.y).distance(pt2(xoff, yoff));
+            let (x, y) = (250. * t.cos(), 250. * t.sin());
+            let mut diameter = pt2(x, y).distance(pt2(xoff, yoff));
+            // let mut diameter = pt2(app.mouse.x, app.mouse.y).distance(pt2(xoff, yoff));
             diameter = diameter / max_distance * 40.;
             draw.rect()
                 .color(BLACK)
