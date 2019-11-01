@@ -14,10 +14,10 @@ fn view(app: &App, frame: &Frame) {
 
     let (w, h) = app.window_rect().w_h();
 
-    let frac = map_range(app.mouse.x, -w / 2., w / 2., 0., 1.);
+    // let frac = map_range(app.mouse.x, -w / 2., w / 2., 0., 1.);
 
-    let n = 11000;
-    let points = 10000..n;
+    let n = 12000;
+    let points = 9000..n;
 
     let points = points.map(|x| {
         Collatz::new(x as f32)
@@ -36,7 +36,7 @@ fn view(app: &App, frame: &Frame) {
             let y0 = y;
             let y1 = y + 8. * (div);
             let x0 = x;
-            let step = 15. * div;
+            let step = 20.;
             // let step = map_range(app.mouse.x, -w / 2., w / 2., 1., 15.);
             let x1 = if p[1] % 2. == 0. { x - step } else { x + step };
             draw.line().points(pt2(x0, y0), pt2(x1, y1));
