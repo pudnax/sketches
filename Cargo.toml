@@ -8,12 +8,6 @@ edition = "2018"
 
 [dependencies]
 nannou = {git = "https://github.com/nannou-org/nannou.git", branch = "master"}
-vulkano = "0.14.0"
-nannou_laser = "0.3.0"
-nannou_audio = "0.2.0"
-nannou_osc = "0.1.0"
 rand = "0.7.2"
-# num = "0.2.0"
 rstar = "0.5.1"
-image = "0.22.3"
 num-complex = "0.2.3"

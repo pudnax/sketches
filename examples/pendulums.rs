@@ -1,5 +1,8 @@
 use nannou::prelude::*;
 
+const speed_relation: f32 = 2.;
+const center: Point2<f32> = Point2 { x: 0., y: 0. };
+
 fn main() {
     nannou::app(model).update(update).run();
 }
@@ -8,17 +11,18 @@ struct Model {
     _window: window::Id,
     speed: f32,
     angle: f32,
-    paths: Vec<(Point2, Srgba<f32>)>,
+    paths: Vec<Vec<(Point2, Srgba<f32>)>>,
     joints: usize,
     lenght: f32,
 }
 
 impl Model {
     fn refresh(&mut self) {
-        self.paths = Vec::new();
-        self.speed = 5.;
-        self.angle = 0.;
         self.joints = 5;
+        let speed = 8. / 1.75.powf(self.joints as f32 - 1.) / 2f32.powf(speed_relation - 1.);
+        self.speed = speed;
+        self.angle = 0.;
+        self.paths = vec![Vec::new(); self.joints];
     }
 }
 
@@ -30,21 +34,40 @@ fn model(app: &App) -> Model {
         .event(window_event)
         .build()
         .unwrap();
+
+    let joints = 5;
+    let speed = 8. / 1.75.powf(joints as f32 - 1.) / 2f32.powf(speed_relation - 1.);
     Model {
         _window,
-        paths: Vec::new(),
-        speed: 5.,
+        paths: vec![Vec::new(); joints],
+        speed,
         angle: 0.,
-        joints: 5,
         lenght: 100.,
+        joints,
     }
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    let x = model.lenght * model.angle.cos();
-    let y = model.lenght * model.angle.sin();
-    model.paths.push((pt2(x, y), srgba(0., 0., 0., 1.)));
-    model.angle += 0.01;
+    let mut pos = center;
+
+    for i in 0..model.joints {
+        let mut a = model.angle * speed_relation.powi(i as i32);
+        if i % 2 == 1 {
+            a = -a;
+        }
+
+        let frac = (model.joints as f32 - i as f32) / model.joints as f32;
+
+        let next_pos: Point2<f32> = Point2::one().with_magnitude(frac * model.lenght);
+        let next_pos = rotate(next_pos, a) + pos;
+        // dbg!(next_pos);
+
+        model.paths[i].push((next_pos, rgba(frac * 0.5, 0., 1. - frac, 1.)));
+        pos = next_pos;
+    }
+
+    model.angle += model.speed * 0.01;
+
     if model.angle > TAU {
         model.refresh()
     }
@@ -78,41 +101,19 @@ fn view(app: &App, model: &Model, frame: &Frame) {
     let draw = app.draw();
     // Clear the background to pink.
     draw.background().color(SLATEGRAY);
-    let win = app.window_rect();
-    let t = app.time;
+    let weight = 4.0;
 
-    let n_points = t as i32 + 1;
-    let weight = 8.0;
+    for vertices in &model.paths {
+        draw.polyline()
+            .weight(weight)
+            .colored_points(vertices.clone());
+    }
 
-    let hz = ((app.mouse.x + win.right()) / win.w()).powi(4) * 1000.0;
-    let vertices = (0..=n_points)
-        // A sine wave mapped to the range of the window.
-        .map(|i| {
-            let amp = 100.;
-            let angle = TAU * i as f32 / n_points as f32;
-            let x = amp * angle.cos();
-            let y = amp * angle.sin();
-            pt2(x, y)
-        })
-        .enumerate()
-        // Colour each vertex uniquely based on its index.
-        .map(|(i, p)| {
-            let fract = i as f32 / n_points as f32;
-            let r = (t + fract) % 1.0;
-            let g = (t + 1.0 - fract) % 1.0;
-            let b = (t + 0.5 + fract) % 1.0;
-            let rgba = srgba(r, g, b, 1.0);
-            (p, rgba)
-        });
-
-    // Draw the polyline as a stroked path.
-    // for vertices in &model.paths {}
-    draw.polyline()
-        .weight(weight)
-        .join_round()
-        .colored_points(model.paths.clone());
-
-    // Draw a red ellipse with default size and position.
-    // Write to the window frame.
     draw.to_frame(app, &frame).unwrap();
+}
+
+fn rotate(p: Point2, a: f32) -> Point2 {
+    let x = p.x * a.cos() - p.y * a.sin();
+    let y = p.x * a.sin() + p.y * a.cos();
+    pt2(x, y)
 }
