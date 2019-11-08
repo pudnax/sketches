@@ -6,3 +6,9 @@ Screenshot*.png
 *.png
 *.jpg
 tiling*.gif
+/examples/circle
+/examples/perlin
+/examples/cell_automata
+/examples/waveclock
+/examples/soap_bubble
+/examples/tic-tac-toe
