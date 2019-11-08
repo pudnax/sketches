@@ -51,7 +51,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     let mut pos = center;
 
     for i in 0..model.joints {
-        let mut a = model.angle * speed_relation.powi(i as i32);
+        // let mut a = -model.angle * speed_relation.powi(i as i32);
+        let mut a = -model.angle;
         if i % 2 == 1 {
             a = -a;
         }
@@ -68,7 +69,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     model.angle += model.speed * 0.01;
 
-    if model.angle > TAU {
+    if model.angle > TAU / 2. {
         model.refresh()
     }
 }

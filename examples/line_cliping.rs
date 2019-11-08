@@ -216,7 +216,7 @@ fn draw_square(x: f32, y: f32, w: f32, step: f32, a: f32, draw: &nannou::app::Dr
         let mut x0 = x - w / 2.;
         let mut y0 = slope * x0 + c + i as f32 * step / a.cos();
         let mut x1 = x + w + w / 2.;
-        let mut y1 = slope * x1 + c + i as f32 * step / a.cos();;
+        let mut y1 = slope * x1 + c + i as f32 * step / a.cos();
         up_accept = line_clipped(x0, y0, x1, y1, x, y, w, w, draw);
 
         x0 = x - w / 2.;
