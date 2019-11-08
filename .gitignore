@@ -2,7 +2,7 @@
 **/*.rs.bk
 /vendor
 .vscode
-screenshot*.png
-out*.png
+Screenshot*.png
+*.png
 *.jpg
 tiling*.gif
