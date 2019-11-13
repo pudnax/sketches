@@ -12,6 +12,8 @@ rand = "0.7.2"
 rstar = "0.5.1"
 num-complex = "0.2.3"
 image = "0.22.3"
+camera = {path = "utils/camera"}
+rotation = {path = "utils/rotation"}
 
 
 [workspace]

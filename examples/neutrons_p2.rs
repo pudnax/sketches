@@ -29,6 +29,8 @@ fn main() {
     let x0 = 0.;
     let xrange = (0..N).map(|i| x0 + dx * (i as f64)).collect::<Vec<_>>();
 
+    println!("{:?}", xrange);
+
     println!("{:?}", &vel_dist(rng.gen()));
 
     println!("{} {}", vx, vy);
